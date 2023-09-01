@@ -22,9 +22,6 @@ class ImagenController extends Controller
         $imagenServidor->save($imagenPath);
 
 
-
-
-
         return response()->json(['Imagen' => $nombreImagen]);
     }
 }
