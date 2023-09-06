@@ -5,13 +5,18 @@
 @endsection
 
 @section('contenido')
-    <div class="container mx-auto flex">
+    <div class="container mx-auto md:flex">
 
         <div class="md:w-1/2">
             <img src="{{ asset('uploads').'/'. $post->imagen }}" alt="Imagen del post {{ $post->titulo }}">
            
-            <div class="p-3">
-                <p>0 Likes</p>
+            <div class="p-3 flex items-center gap-4">
+                @auth
+
+                    <livewire:like-post :post="$post" />
+                    
+                @endauth
+                
             </div>
 
             <div>
@@ -20,7 +25,29 @@
                 <p class="text-sm text-gray-500">{{ $post->created_at->diffForHUmans()}}</p>
                 <p class="mt-5">{{ $post->descripcion}}</p>
             </div>
+            
+            @auth
+                @if ($post->user_id === auth()->user()->id)
+                    
+                <form action="{{ route('posts.destroy', $post) }}" method="POST">
+                    <!--Metodo spoofing ayuda para usarlo para otro metodo ya que 
+                    el navegador solo obtiene los metodos 'POST' y el metodo 'GET'
+                    y con este nos ayuda a usar el metodo delete-->
+                    @method('DELETE')
+                    @csrf
+                    <input 
+                    type="submit"
+                    value="Eliminar publicación"
+                    class="bg-red-500 hover:bg-red-600 p-2 rounded text-white font-bold mt-4 cursor-pointer">
+                </form>
+
+                @endif
+            
+            @endauth
+
+
         </div>
+
 
         <div class="md:w-1/2">
             <div class="shadow bg-white p-5 mb-5">
@@ -28,8 +55,16 @@
                     si el usuario lo esta -->
                 @auth
                 <p class="text-xl font-bold text-center mb-4">Agregar un nuevo comentario</p>
-                <form action="">
+                
+                @if (session('mensaje'))
+                <div class="bg-green-500 p-2 rounded-lg mb-6 text-white text-center uppercase font-bold">
+                    {{session('mensaje')}}
+                </div>
+                    
+                @endif
 
+                <form action="{{ route('comentarios.store', [ 'post' => $post, 'user' => $user ] ) }}" method="POST">
+                    @csrf
                     <div class="mb-5">
                         <label for="comentario" class="mb-2 block uppercase
                         text-gray-500 font-bold">Añade un comentario</label>
@@ -57,9 +92,27 @@
                 uppercase font-bold w-full p-3 text-white rounded-lg">
             </form>
             @endauth
+                <div class="bg-white shadow mb-5 max-h-96 overflow-y-scroll mt-10">
+                   @if ($post->comentarios->count())
+                   @foreach ($post->comentarios as $item)
+                        <div class="p-5 border-gray-300 border-b">
+                            <a href="{{ route('posts.index', $item->user)}}" class="font-bold">
+                                {{$item->user->username}}
+                            </a>
+                            <p>{{$item->comentario}}</p>
+                            <p class="text-sm text-gray-500">{{$item->created_at->diffForHumans()}}</p>
+
+                        </div>
+                       
+                   @endforeach
+                       
+                   @else
+                       <p class="p-10 text-center">No hay comentarios aun </p>
+                   @endif
+
+                </div>
             </div>
         </div>
-
     </div>
     
 @endsection
